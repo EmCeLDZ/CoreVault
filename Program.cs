@@ -2,7 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using CoreKV.Data;
 using CoreKV.Middleware;
 using CoreKV.Services;
-using CoreKV.Models;
+using CoreKV.Domain.Entities;
+using CoreKV.Domain.Interfaces;
+using CoreKV.Infrastructure.Persistence;
+using CoreKV.Domain.Services;
+using CoreKV.Application.Services;
+using CoreKV.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +18,59 @@ builder.Services.AddDbContext<CoreKVContext>(options =>
 // Add services to DI container
 builder.Services.AddControllers();
 
+// Register repositories
+builder.Services.AddScoped<IKeyValueRepository, KeyValueRepository>();
+builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
+
+// Register domain services
+builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
+
+// Register application services
+builder.Services.AddScoped<IKeyValueService, KeyValueService>();
+
+// Add Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { 
+        Title = "CoreKV API", 
+        Version = "v1",
+        Description = "A simple Key-Value store with namespace-based access control"
+    });
+    
+    c.AddSecurityDefinition("ApiKey", new()
+    {
+        Name = "X-API-Key",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Description = "API Key authentication"
+    });
+    
+    c.AddSecurityRequirement(new()
+    {
+        {
+            new()
+            {
+                Reference = new()
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "ApiKey"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
 var app = builder.Build();
+
+// Configure Swagger
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "CoreKV API v1");
+    c.RoutePrefix = string.Empty; // Serve Swagger at root
+});
 
 // Add API Key middleware
 app.UseMiddleware<ApiKeyMiddleware>();
@@ -28,7 +85,8 @@ using (var scope = app.Services.CreateScope())
     await DatabaseSeeder.SeedData(context);
     
     // Create admin key if none exists
-    if (!await context.ApiKeys.AnyAsync(k => k.Role == ApiKeyRole.Admin))
+    var apiKeyRepository = scope.ServiceProvider.GetRequiredService<IApiKeyRepository>();
+    if (!await apiKeyRepository.ExistsAdminKeyAsync())
     {
         var adminKey = ApiKeyGenerator.GenerateSecureApiKey();
         var apiKey = new ApiKey
@@ -40,8 +98,7 @@ using (var scope = app.Services.CreateScope())
             CreatedAt = DateTime.UtcNow
         };
         
-        context.ApiKeys.Add(apiKey);
-        await context.SaveChangesAsync();
+        await apiKeyRepository.CreateAsync(apiKey);
         
         Console.WriteLine($"=== ADMIN KEY CREATED ===");
         Console.WriteLine($"Key: {adminKey}");

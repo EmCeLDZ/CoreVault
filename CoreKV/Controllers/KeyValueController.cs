@@ -1,127 +1,125 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using CoreKV.Models;
-using CoreKV.Data;
+using CoreKV.Domain.Entities;
+using CoreKV.Application.Services;
+using CoreKV.Application.DTOs;
 using CoreKV.Filters;
 
 [ApiController]
 [Route("api/[controller]")]
 public class KeyValueController : ControllerBase
 {
-    private readonly CoreKVContext _context;
+    private readonly IKeyValueService _keyValueService;
 
-    public KeyValueController(CoreKVContext context)
+    public KeyValueController(IKeyValueService keyValueService)
     {
-        _context = context;
+        _keyValueService = keyValueService;
+    }
+
+    private ApiKey GetCurrentApiKey()
+    {
+        var apiKey = HttpContext.Items["ApiKey"] as ApiKey;
+        if (apiKey == null)
+            throw new UnauthorizedAccessException("API key required");
+        
+        return apiKey;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<KeyValueItem>>> GetAll(string? @namespace = null)
     {
-        var query = _context.KeyValueItems.AsQueryable();
-        
-        // Filter by namespace if specified
-        if (!string.IsNullOrEmpty(@namespace))
+        try
         {
-            query = query.Where(x => x.Namespace == @namespace);
+            var apiKey = GetCurrentApiKey();
+            var items = await _keyValueService.GetAllAsync(@namespace, apiKey);
+            return Ok(items);
         }
-        // For non-admin users, show only their namespaces
-        else if (HttpContext.Items["UserRole"] is not ApiKeyRole.Admin)
+        catch (UnauthorizedAccessException ex)
         {
-            var allowedNamespaces = HttpContext.Items["AllowedNamespaces"] as List<string> ?? new();
-            query = query.Where(x => allowedNamespaces.Contains(x.Namespace) || 
-                                   allowedNamespaces.Contains("*"));
+            return Unauthorized(ex.Message);
         }
-
-        return await query.ToListAsync();
     }
 
     [HttpGet("{namespace}/{key}")]
     public async Task<ActionResult<KeyValueItem>> GetByKey(string @namespace, string key)
     {
-        var item = await _context.KeyValueItems
-            .FirstOrDefaultAsync(x => x.Namespace == @namespace && x.Key == key);
-        
-        if (item == null)
+        try
         {
-            return NotFound($"Key '{key}' not found in namespace '{@namespace}'");
+            var apiKey = GetCurrentApiKey();
+            var item = await _keyValueService.GetByKeyAsync(@namespace, key, apiKey);
+            
+            if (item == null)
+            {
+                return NotFound($"Key '{key}' not found in namespace '{@namespace}'");
+            }
+            
+            return Ok(item);
         }
-        
-        return Ok(item);
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
     }
 
     [HttpPost]
     [RequireNamespace]
-    public async Task<ActionResult<KeyValueItem>> Create([FromBody] KeyValueItem item)
+    public async Task<ActionResult<KeyValueItem>> Create([FromBody] CreateKeyValueRequest request)
     {
-        // Check write permissions
-        if (HttpContext.Items["UserRole"] is not (ApiKeyRole.Admin or ApiKeyRole.ReadWrite))
+        try
         {
-            return Forbid("Write access required");
+            var apiKey = GetCurrentApiKey();
+            var item = await _keyValueService.CreateAsync(request, apiKey);
+            
+            return CreatedAtAction(nameof(GetByKey), new { @namespace = item.Namespace, key = item.Key }, item);
         }
-
-        // Check if key already exists
-        if (await _context.KeyValueItems.AnyAsync(x => x.Namespace == item.Namespace && x.Key == item.Key))
+        catch (UnauthorizedAccessException ex)
         {
-            return BadRequest($"Key '{item.Key}' already exists in namespace '{item.Namespace}'");
+            return Unauthorized(ex.Message);
         }
-
-        item.CreatedAt = DateTime.UtcNow;
-        item.UpdatedAt = DateTime.UtcNow;
-        
-        _context.KeyValueItems.Add(item);
-        await _context.SaveChangesAsync();
-        
-        return CreatedAtAction(nameof(GetByKey), new { @namespace = item.Namespace, key = item.Key }, item);
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPut("{namespace}/{key}")]
     [RequireNamespace]
-    public async Task<ActionResult<KeyValueItem>> Update(string @namespace, string key, [FromBody] string value)
+    public async Task<ActionResult<KeyValueItem>> Update(string @namespace, string key, [FromBody] UpdateKeyValueRequest request)
     {
-        // Check write permissions
-        if (HttpContext.Items["UserRole"] is not (ApiKeyRole.Admin or ApiKeyRole.ReadWrite))
+        try
         {
-            return Forbid("Write access required");
-        }
-
-        var item = await _context.KeyValueItems
-            .FirstOrDefaultAsync(x => x.Namespace == @namespace && x.Key == key);
+            var apiKey = GetCurrentApiKey();
+            var item = await _keyValueService.UpdateAsync(@namespace, key, request, apiKey);
             
-        if (item == null)
-        {
-            return NotFound($"Key '{key}' not found in namespace '{@namespace}'");
+            return Ok(item);
         }
-
-        item.Value = value;
-        item.UpdatedAt = DateTime.UtcNow;
-        
-        await _context.SaveChangesAsync();
-        
-        return Ok(item);
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     [HttpDelete("{namespace}/{key}")]
     [RequireNamespace]
     public async Task<IActionResult> Delete(string @namespace, string key)
     {
-        // Check write permissions
-        if (HttpContext.Items["UserRole"] is not (ApiKeyRole.Admin or ApiKeyRole.ReadWrite))
+        try
         {
-            return Forbid("Write access required");
-        }
-
-        var item = await _context.KeyValueItems
-            .FirstOrDefaultAsync(x => x.Namespace == @namespace && x.Key == key);
+            var apiKey = GetCurrentApiKey();
+            await _keyValueService.DeleteAsync(@namespace, key, apiKey);
             
-        if (item == null)
-        {
-            return NotFound($"Key '{key}' not found in namespace '{@namespace}'");
+            return NoContent();
         }
-
-        _context.KeyValueItems.Remove(item);
-        await _context.SaveChangesAsync();
-        
-        return NoContent();
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 }

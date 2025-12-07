@@ -1,5 +1,6 @@
-using CoreKV.Models;
+using CoreKV.Domain.Entities;
 using CoreKV.Data;
+using CoreKV.Domain.Interfaces;
 
 namespace CoreKV.Middleware
 {
@@ -36,8 +37,8 @@ namespace CoreKV.Middleware
             
             // 3. Check key in database
             using var scope = context.RequestServices.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<CoreKVContext>();
-            var keyRecord = await dbContext.ApiKeys.FindAsync(apiKey.ToString());
+            var apiKeyRepository = scope.ServiceProvider.GetRequiredService<IApiKeyRepository>();
+            var keyRecord = await apiKeyRepository.GetByKeyAsync(apiKey.ToString());
             
             if (keyRecord == null)
             {
@@ -47,6 +48,7 @@ namespace CoreKV.Middleware
             }
             
             // 4. Save user data in context
+            context.Items["ApiKey"] = keyRecord;
             context.Items["UserRole"] = keyRecord.Role;
             context.Items["AllowedNamespaces"] = keyRecord.AllowedNamespaces
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using CoreKV.Services;
-using CoreKV.Models;
+using CoreKV.Domain.Entities;
 using CoreKV.Data;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,4 +1,4 @@
-using CoreKV.Models;
+using CoreKV.Domain.Entities;
 using CoreKV.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,15 +21,13 @@ namespace CoreKV.Services
                 {
                     Namespace = "public",
                     Key = "welcome",
-                    Value = "Welcome to CoreKV API!",
-                    IsEncrypted = false
+                    Value = "Welcome to CoreKV API!"
                 },
                 new KeyValueItem
                 {
                     Namespace = "public",
                     Key = "version",
-                    Value = "1.0.0",
-                    IsEncrypted = false
+                    Value = "1.0.0"
                 }
             };
 
