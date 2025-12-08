@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using CoreKV;
 using CoreKV.Data;
+using CoreKV.Domain.Entities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +48,18 @@ public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
                     // Ensure database is created
                     db.Database.OpenConnection();
                     db.Database.EnsureCreated();
+                    
+                    // Seed test API key
+                    var testApiKey = new ApiKey
+                    {
+                        Key = "test-key-for-ci",
+                        Role = ApiKeyRole.ReadWrite,
+                        AllowedNamespaces = "*",
+                        Description = "Test API key for CI",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    db.ApiKeys.Add(testApiKey);
+                    db.SaveChanges();
                 }
             });
             
