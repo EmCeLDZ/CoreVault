@@ -8,6 +8,7 @@ namespace CoreKV.Infrastructure.Logging
         void LogKeyValueAccess(string @namespace, string key, string operation, bool success, string? apiKey = null);
         void LogAuthenticationAttempt(string apiKey, bool success, string reason);
         void LogDatabaseOperation(string operation, string table, bool success, long duration);
+        Task LogErrorAsync(Exception exception, string correlationId, Dictionary<string, object> context);
     }
 
     public class AuditLogger : IAuditLogger
@@ -65,6 +66,15 @@ namespace CoreKV.Infrastructure.Logging
                 table,
                 success,
                 duration);
+        }
+
+        public async Task LogErrorAsync(Exception exception, string correlationId, Dictionary<string, object> context)
+        {
+            _logger.LogError(exception, 
+                "Error logged - CorrelationId: {CorrelationId} - Context: {@Context}",
+                correlationId, context);
+            
+            await Task.CompletedTask;
         }
     }
 }
