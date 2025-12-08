@@ -1,16 +1,16 @@
 using Microsoft.EntityFrameworkCore;
-using CoreKV.Data;
-using CoreKV.Middleware;
-using CoreKV.Services;
-using CoreKV.Domain.Entities;
-using CoreKV.Domain.Interfaces;
-using CoreKV.Infrastructure.Persistence;
-using CoreKV.Domain.Services;
-using CoreKV.Application.Services;
-using CoreKV.Application.Interfaces;
-using CoreKV.Infrastructure.Services;
-using CoreKV.Filters;
-using CoreKV.Infrastructure.Logging;
+using CoreVault.Data;
+using CoreVault.Middleware;
+using CoreVault.Services;
+using CoreVault.Domain.Entities;
+using CoreVault.Domain.Interfaces;
+using CoreVault.Infrastructure.Persistence;
+using CoreVault.Domain.Services;
+using CoreVault.Application.Services;
+using CoreVault.Application.Interfaces;
+using CoreVault.Infrastructure.Services;
+using CoreVault.Filters;
+using CoreVault.Infrastructure.Logging;
 using Microsoft.AspNetCore.Http.Features;
 using Serilog;
 
@@ -21,7 +21,7 @@ builder.Host.UseSerilog((context, configuration) =>
     LoggingConfiguration.ConfigureSerilog(context.Configuration));
 
 // Add DbContext with SQLite
-builder.Services.AddDbContext<CoreKVContext>(options =>
+builder.Services.AddDbContext<CoreVaultContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to DI container
@@ -68,9 +68,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { 
-        Title = "CoreKV API", 
+        Title = "CoreVault API", 
         Version = "v1",
-        Description = "A simple Key-Value store with namespace-based access control"
+        Description = "A comprehensive vault platform with KV storage, file management, and security features"
     });
     
     c.AddSecurityDefinition("ApiKey", new()
@@ -103,7 +103,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "CoreKV API v1");
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "CoreVault API v1");
     c.RoutePrefix = string.Empty; // Serve Swagger at root
 });
 
@@ -113,7 +113,7 @@ app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 // Create database and initialize data
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<CoreKVContext>();
+    var context = scope.ServiceProvider.GetRequiredService<CoreVaultContext>();
     context.Database.EnsureCreated();
     
     // Skip seeding data in test environment completely

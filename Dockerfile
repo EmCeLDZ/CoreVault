@@ -9,16 +9,16 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 # Copy csproj and restore as distinct layers
-COPY ["CoreKV.csproj", "./"]
-RUN dotnet restore "./CoreKV.csproj"
+COPY ["CoreVault.csproj", "./"]
+RUN dotnet restore "./CoreVault.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/."
-RUN dotnet build "CoreKV.csproj" -c Release -o /app/build
+RUN dotnet build "CoreVault.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "CoreKV.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "CoreVault.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Build runtime image
 FROM base AS final
@@ -36,4 +36,4 @@ USER app
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:80/health || exit 1
 
-ENTRYPOINT ["dotnet", "CoreKV.dll"]
+ENTRYPOINT ["dotnet", "CoreVault.dll"]

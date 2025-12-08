@@ -1,11 +1,11 @@
 # Changelog
 
-All notable changes to CoreKV will be documented in this file.
+All notable changes to CoreVault will be documented in this file.
 
 ## [1.0.0] - 2025-12-07
 
 ### Added
-- Initial release of CoreKV API
+- Initial release of CoreVault API
 - Key-value storage with namespace support
 - API key authentication with role-based access control
 - File storage module with support for images, videos, audio, documents, and archives

@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreKV", "CoreKV.csproj", "{588993D5-1D8B-4217-A87C-54CFD3AAB07A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreVault", "CoreVault.csproj", "{588993D5-1D8B-4217-A87C-54CFD3AAB07A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreKV.Tests", "CoreKV.Tests\CoreKV.Tests.csproj", "{1F8A9CAB-7D92-4808-AD1F-C9D68F59B9E7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreVault.Tests", "CoreVault.Tests\CoreVault.Tests.csproj", "{1F8A9CAB-7D92-4808-AD1F-C9D68F59B9E7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

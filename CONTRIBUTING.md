@@ -1,6 +1,6 @@
-# Contributing to CoreKV
+# Contributing to CoreVault
 
-Thank you for your interest in contributing to CoreKV! This document provides guidelines for contributors.
+Thank you for your interest in contributing to CoreVault! This document provides guidelines for contributors.
 
 ## How to Contribute
 
