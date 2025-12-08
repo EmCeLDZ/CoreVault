@@ -8,6 +8,7 @@ using ApiKey = CoreKV.Domain.Entities.ApiKey;
 
 [ApiController]
 [Route("api/[controller]")]
+[TypeFilter(typeof(ValidationFilter))]
 public class FileController : ControllerBase
 {
     private readonly IFileStorageManagementService _fileStorageService;
@@ -32,7 +33,7 @@ public class FileController : ControllerBase
         try
         {
             var apiKey = GetCurrentApiKey();
-            return Ok(new { message = "File controller works!", timestamp = DateTime.UtcNow, apiKey = apiKey.Key });
+            return Ok(new { message = "File controller works!", timestamp = DateTime.UtcNow, role = apiKey.Role });
         }
         catch (Exception ex)
         {

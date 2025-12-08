@@ -15,6 +15,14 @@ public class KeyValueController : ControllerBase
         _keyValueService = keyValueService;
     }
 
+    [HttpGet("debug")]
+    public IActionResult Debug()
+    {
+        Console.WriteLine("[CONTROLLER] Debug endpoint called");
+        Console.Out.Flush();
+        return Ok(new { message = "Debug endpoint works", timestamp = DateTime.UtcNow });
+    }
+
     private ApiKey GetCurrentApiKey()
     {
         var apiKey = HttpContext.Items["ApiKey"] as ApiKey;
@@ -44,19 +52,34 @@ public class KeyValueController : ControllerBase
     {
         try
         {
+            Console.WriteLine($"[CONTROLLER] GetByKey called with namespace: '{@namespace}', key: '{key}'");
+            Console.Out.Flush();
             var apiKey = GetCurrentApiKey();
+            Console.WriteLine($"[CONTROLLER] API Key retrieved: {apiKey?.Key}");
+            Console.WriteLine($"[CONTROLLER] API Key Role: {apiKey?.Role}");
+            Console.Out.Flush();
+            
             var item = await _keyValueService.GetByKeyAsync(@namespace, key, apiKey);
+            Console.WriteLine($"[CONTROLLER] Service returned item: {item != null}");
+            Console.Out.Flush();
             
             if (item == null)
             {
+                Console.WriteLine($"[CONTROLLER] Returning NotFound");
+                Console.Out.Flush();
                 return NotFound($"Key '{key}' not found in namespace '{@namespace}'");
             }
             
+            Console.WriteLine($"[CONTROLLER] Returning Ok");
+            Console.Out.Flush();
             return Ok(item);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (Exception ex)
         {
-            return Unauthorized(ex.Message);
+            Console.WriteLine($"[CONTROLLER] Exception: {ex.Message}");
+            Console.WriteLine($"[CONTROLLER] Stack Trace: {ex.StackTrace}");
+            Console.Out.Flush();
+            throw;
         }
     }
 
