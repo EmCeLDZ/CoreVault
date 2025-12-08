@@ -11,10 +11,11 @@ using Xunit;
 namespace CoreKV.Tests;
 
 [Trait("Category", "Integration")]
-public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
 {
     private readonly HttpClient _client;
     private readonly WebApplicationFactory<Program> _factory;
+    private readonly CoreKVContext _dbContext;
 
     public ApiIntegrationTests(WebApplicationFactory<Program> factory)
     {
@@ -36,7 +37,7 @@ public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
                     options.UseSqlite("DataSource=:memory:");
                 });
 
-                // Create the service provider
+                // Create the service provider and initialize database
                 var sp = services.BuildServiceProvider();
                 using (var scope = sp.CreateScope())
                 {
@@ -46,21 +47,27 @@ public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
                     // Ensure database is created
                     db.Database.OpenConnection();
                     db.Database.EnsureCreated();
-                    
-                    // Apply migrations if needed
-                    if (db.Database.GetPendingMigrations().Any())
-                    {
-                        db.Database.Migrate();
-                    }
                 }
             });
         });
+
+        // Get database context for cleanup
+        var scope = _factory.Services.CreateScope();
+        _dbContext = scope.ServiceProvider.GetRequiredService<CoreKVContext>();
 
         // Tworzymy wirtualnego klienta HTTP (jak przeglądarka/Postman)
         _client = _factory.CreateClient();
         
         // Dodajemy klucz API do nagłówków
         _client.DefaultRequestHeaders.Add("X-Api-Key", "test-key-for-ci");
+    }
+
+    public void Dispose()
+    {
+        _dbContext?.Database?.CloseConnection();
+        _dbContext?.Dispose();
+        _client?.Dispose();
+        _factory?.Dispose();
     }
 
     [Fact]
