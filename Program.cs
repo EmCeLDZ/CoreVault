@@ -61,6 +61,7 @@ builder.Services.AddScoped<IVaultService, VaultService>();
 
 // Register infrastructure services
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddScoped<ISecureFileService, SecureFileService>();
 
 // Register logging services
 builder.Services.AddSingleton<IAuditLogger, AuditLogger>();
