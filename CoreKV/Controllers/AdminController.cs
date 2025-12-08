@@ -25,26 +25,9 @@ namespace CoreKV.Controllers
             { 
                 Key = newKey,
                 Role = "ReadWrite",
-                Message = "Add this key to appsettings.json under ApiKeys:ReadWrite",
+                Message = "Add this key to database via SetupController",
                 Warning = "Store this key securely - it won't be shown again"
             });
-        }
-        
-        [HttpGet("current-config")]
-        public IActionResult GetCurrentConfig()
-        {
-            // Tylko do dev - nie pokazuje rzeczywistych keys w production!
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
-            {
-                return Ok(new 
-                { 
-                    Message = "Current API Keys configured",
-                    ReadOnlyConfigured = !string.IsNullOrEmpty(_configuration["ApiKeys:ReadOnly"]),
-                    ReadWriteConfigured = !string.IsNullOrEmpty(_configuration["ApiKeys:ReadWrite"])
-                });
-            }
-            
-            return Forbid("Not available in production");
         }
     }
 }

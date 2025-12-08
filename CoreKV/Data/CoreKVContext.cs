@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using CoreKV.Domain.Entities;
+using CoreKV.Models;
+using ApiKey = CoreKV.Domain.Entities.ApiKey;
+using KeyValueItem = CoreKV.Domain.Entities.KeyValueItem;
 
 namespace CoreKV.Data
 {
@@ -11,6 +14,7 @@ namespace CoreKV.Data
 
         public DbSet<KeyValueItem> KeyValueItems { get; set; } = null!;
         public DbSet<ApiKey> ApiKeys { get; set; } = null!;
+        public DbSet<FileStorage> FileStorage { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using CoreKV.Models;
+using CoreKV.Domain.Entities;
+using ApiKey = CoreKV.Domain.Entities.ApiKey;
+using KeyValueItem = CoreKV.Domain.Entities.KeyValueItem;
 
 namespace CoreKV.Filters
 {

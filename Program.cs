@@ -8,8 +8,15 @@ using CoreKV.Infrastructure.Persistence;
 using CoreKV.Domain.Services;
 using CoreKV.Application.Services;
 using CoreKV.Filters;
+using CoreKV.Infrastructure.Logging;
+using Microsoft.AspNetCore.Http.Features;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+builder.Host.UseSerilog((context, configuration) =>
+    LoggingConfiguration.ConfigureSerilog(context.Configuration));
 
 // Add DbContext with SQLite
 builder.Services.AddDbContext<CoreKVContext>(options =>
@@ -17,6 +24,25 @@ builder.Services.AddDbContext<CoreKVContext>(options =>
 
 // Add services to DI container
 builder.Services.AddControllers();
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+// Configure form options for file uploads
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 209715200; // 200MB
+    options.ValueLengthLimit = 209715200;
+    options.BufferBody = false;
+});
 
 // Register repositories
 builder.Services.AddScoped<IKeyValueRepository, KeyValueRepository>();
@@ -27,6 +53,9 @@ builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
 
 // Register application services
 builder.Services.AddScoped<IKeyValueService, KeyValueService>();
+
+// Register logging services
+builder.Services.AddSingleton<IAuditLogger, AuditLogger>();
 
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -108,7 +137,11 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure middleware pipeline
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // Wyłączone na potrzeby testów
+app.UseCors("AllowAll");
+app.UseSerilogRequestLogging();
+app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<ApiKeyMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
 
