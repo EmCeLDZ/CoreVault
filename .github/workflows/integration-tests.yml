@@ -1,4 +1,4 @@
-name: Build and Test
+name: Integration Tests
 
 on:
   push:
@@ -10,8 +10,20 @@ env:
   DOTNET_VERSION: '9.0.x'
 
 jobs:
-  build-and-test:
+  integration-tests:
     runs-on: ubuntu-latest
+    
+    services:
+      # Możesz dodać bazę danych jeśli potrzebujesz
+      # postgres:
+      #   image: postgres:15
+      #   env:
+      #     POSTGRES_PASSWORD: postgres
+      #   options: >-
+      #     --health-cmd pg_isready
+      #     --health-interval 10s
+      #     --health-timeout 5s
+      #     --health-retries 5
     
     steps:
     - name: Checkout code
@@ -33,18 +45,12 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore CoreVault.sln
       
-    - name: Restore test dependencies
-      run: dotnet restore CoreKV.Tests/CoreKV.Tests.csproj
-      
     - name: Build
       run: dotnet build CoreVault.sln --no-restore --configuration Release
       
-    - name: Run unit tests only
-      run: dotnet test CoreVault.sln --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --filter "Category=Unit"
-      
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v4
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: '**/coverage.cobertura.xml'
-        fail_ci_if_error: false
+    - name: Run integration tests
+      run: dotnet test CoreKV.Tests/CoreKV.Tests.csproj --no-build --configuration Release --verbosity normal --filter "Category=Integration"
+      env:
+        # Dodaj zmienne środowiskowe potrzebne do testów
+        ASPNETCORE_ENVIRONMENT: Testing
+        ADMIN_API_KEY: test-key-for-ci
