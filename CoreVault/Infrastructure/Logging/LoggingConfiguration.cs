@@ -15,7 +15,7 @@ namespace CoreVault.Infrastructure.Logging
                 .WriteTo.Console(
                     outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
                 .WriteTo.File(
-                    path: "logs/corekv-.log",
+                    path: "logs/corevault-.log",
                     rollingInterval: RollingInterval.Day,
                     retainedFileCountLimit: 30)
                 .CreateLogger();

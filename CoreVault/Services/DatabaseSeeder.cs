@@ -21,7 +21,7 @@ namespace CoreVault.Services
                 {
                     Namespace = "public",
                     Key = "welcome",
-                    Value = "Welcome to CoreKV API!"
+                    Value = "Welcome to CoreVault API!"
                 },
                 new KeyValueItem
                 {
