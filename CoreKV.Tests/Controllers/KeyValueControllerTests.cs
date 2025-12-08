@@ -5,6 +5,7 @@ using FluentAssertions;
 using CoreKV.Domain.Entities;
 using CoreKV.Application.Interfaces;
 using CoreKV.Controllers;
+using Xunit;
 
 namespace CoreKV.Tests.Controllers;
 

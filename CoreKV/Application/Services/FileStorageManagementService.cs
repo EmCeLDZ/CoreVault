@@ -131,7 +131,7 @@ public class FileStorageManagementService : IFileStorageManagementService
         return true;
     }
 
-    public async Task<bool> HasNamespaceAccessAsync(string @namespace, ApiKey apiKey)
+    public async Task<bool> HasNamespaceAccessAsync(string @namespace, ApiKey? apiKey)
     {
         if (apiKey == null)
             return false;

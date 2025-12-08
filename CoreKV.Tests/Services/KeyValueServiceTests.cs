@@ -8,6 +8,7 @@ using CoreKV.Domain.Interfaces;
 using CoreKV.Domain.Services;
 using CoreKV.Application.Services;
 using CoreKV.Application.Interfaces;
+using Xunit;
 
 namespace CoreKV.Tests.Services;
 
