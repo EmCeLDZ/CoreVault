@@ -49,6 +49,9 @@ public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
                     db.Database.EnsureCreated();
                 }
             });
+            
+            // Set environment to Testing
+            builder.UseEnvironment("Testing");
         });
 
         // Get database context for cleanup
