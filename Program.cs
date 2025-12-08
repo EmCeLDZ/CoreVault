@@ -14,8 +14,6 @@ using CoreKV.Infrastructure.Logging;
 using Microsoft.AspNetCore.Http.Features;
 using Serilog;
 
-public partial class Program { }
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Serilog
@@ -157,3 +155,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
