@@ -1,5 +1,3 @@
-public partial class Program { }
-
 using Microsoft.EntityFrameworkCore;
 using CoreKV.Data;
 using CoreKV.Middleware;
@@ -15,6 +13,8 @@ using CoreKV.Filters;
 using CoreKV.Infrastructure.Logging;
 using Microsoft.AspNetCore.Http.Features;
 using Serilog;
+
+public partial class Program { }
 
 var builder = WebApplication.CreateBuilder(args);
 
