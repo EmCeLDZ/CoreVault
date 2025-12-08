@@ -45,9 +45,15 @@ public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
                     var scopedServices = scope.ServiceProvider;
                     var db = scopedServices.GetRequiredService<CoreKVContext>();
                     
-                    // Ensure database is created
+                    // Ensure database is created with full schema
                     db.Database.OpenConnection();
                     db.Database.EnsureCreated();
+                    
+                    // Apply all migrations to ensure complete schema
+                    if (db.Database.GetPendingMigrations().Any())
+                    {
+                        db.Database.Migrate();
+                    }
                     
                     // Seed test API key
                     var testApiKey = new ApiKey
