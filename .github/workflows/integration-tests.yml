@@ -54,7 +54,7 @@ jobs:
       run: dotnet build CoreVault.sln --no-restore --configuration Release
       
     - name: Run integration tests
-      run: dotnet test CoreKV.Tests/CoreKV.Tests.csproj --no-build --configuration Release --verbosity normal --filter "Category=Integration"
+      run: dotnet test CoreVault.Tests/CoreVault.Tests.csproj --no-build --configuration Release --verbosity normal --filter "Category=Integration"
       env:
         # Dodaj zmienne środowiskowe potrzebne do testów
         ASPNETCORE_ENVIRONMENT: Testing
