@@ -28,14 +28,14 @@ public class LocalFileStorageService : IFileStorageService
         return storedFileName;
     }
 
-    public async Task<Stream?> GetFileStreamAsync(string storedFileName, CancellationToken cancellationToken = default)
+    public Task<Stream?> GetFileStreamAsync(string storedFileName, CancellationToken cancellationToken = default)
     {
         var filePath = Path.Combine(_storagePath, storedFileName);
         
         if (!File.Exists(filePath))
-            return null;
+            return Task.FromResult<Stream?>(null);
 
-        return new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        return Task.FromResult<Stream?>(new FileStream(filePath, FileMode.Open, FileAccess.Read));
     }
 
     public async Task<byte[]?> GetFileBytesAsync(string storedFileName, CancellationToken cancellationToken = default)
@@ -48,21 +48,21 @@ public class LocalFileStorageService : IFileStorageService
         return await File.ReadAllBytesAsync(filePath, cancellationToken);
     }
 
-    public async Task<bool> DeleteFileAsync(string storedFileName, CancellationToken cancellationToken = default)
+    public Task<bool> DeleteFileAsync(string storedFileName, CancellationToken cancellationToken = default)
     {
         var filePath = Path.Combine(_storagePath, storedFileName);
         
         if (!File.Exists(filePath))
-            return false;
+            return Task.FromResult(false);
 
         File.Delete(filePath);
-        return true;
+        return Task.FromResult(true);
     }
 
-    public async Task<bool> FileExistsAsync(string storedFileName, CancellationToken cancellationToken = default)
+    public Task<bool> FileExistsAsync(string storedFileName, CancellationToken cancellationToken = default)
     {
         var filePath = Path.Combine(_storagePath, storedFileName);
-        return File.Exists(filePath);
+        return Task.FromResult(File.Exists(filePath));
     }
 
     public async Task<string> ComputeFileHashAsync(Stream fileStream, CancellationToken cancellationToken = default)

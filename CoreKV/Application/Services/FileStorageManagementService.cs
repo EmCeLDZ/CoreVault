@@ -71,8 +71,8 @@ public class FileStorageManagementService : IFileStorageManagementService
         
         if (apiKey?.AllowedNamespaces != "*")
         {
-            var allowedNamespaces = apiKey.AllowedNamespaces.Split(',');
-            query = query.Where(f => allowedNamespaces.Contains(f.Namespace));
+            var allowedNamespaces = apiKey!.AllowedNamespaces.Split(',');
+            query = query.Where(f => allowedNamespaces.Contains(f.Namespace!));
         }
         
         var files = await query.OrderByDescending(f => f.CreatedAt).ToListAsync();
@@ -131,15 +131,15 @@ public class FileStorageManagementService : IFileStorageManagementService
         return true;
     }
 
-    public async Task<bool> HasNamespaceAccessAsync(string @namespace, ApiKey? apiKey)
+    public Task<bool> HasNamespaceAccessAsync(string @namespace, ApiKey? apiKey)
     {
         if (apiKey == null)
-            return false;
+            return Task.FromResult(false);
         
         if (apiKey.AllowedNamespaces == "*")
-            return true;
+            return Task.FromResult(true);
         
         var allowedNamespaces = apiKey.AllowedNamespaces.Split(',');
-        return allowedNamespaces.Contains(@namespace);
+        return Task.FromResult(allowedNamespaces.Contains(@namespace));
     }
 }

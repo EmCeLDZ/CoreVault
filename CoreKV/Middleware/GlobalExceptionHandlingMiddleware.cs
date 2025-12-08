@@ -49,7 +49,7 @@ public class GlobalExceptionHandlingMiddleware
             ["Method"] = method,
             ["UserId"] = userId,
             ["UserAgent"] = context.Request.Headers["User-Agent"].ToString(),
-            ["RemoteIP"] = context.Connection.RemoteIpAddress?.ToString()
+            ["RemoteIP"] = context.Connection.RemoteIpAddress?.ToString() ?? "Unknown"
         });
 
         context.Response.Clear();
