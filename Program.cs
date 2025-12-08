@@ -49,6 +49,7 @@ builder.Services.Configure<FormOptions>(options =>
 // Register repositories
 builder.Services.AddScoped<IKeyValueRepository, KeyValueRepository>();
 builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
+builder.Services.AddScoped<IVaultRepository, VaultRepository>();
 
 // Register domain services
 builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
@@ -56,6 +57,7 @@ builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
 // Register application services
 builder.Services.AddScoped<IKeyValueService, KeyValueService>();
 builder.Services.AddScoped<IFileStorageManagementService, FileStorageManagementService>();
+builder.Services.AddScoped<IVaultService, VaultService>();
 
 // Register infrastructure services
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
