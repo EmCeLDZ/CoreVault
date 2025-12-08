@@ -1,29 +1,34 @@
 name: Integration Tests
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
+  workflow_run:
+    workflows: ["Build and Test"]
+    types:
+      - completed
+  workflow_dispatch:
 
 env:
   DOTNET_VERSION: '9.0.x'
 
 jobs:
-  integration-tests:
+  validate:
+    name: Validate Workflow
     runs-on: ubuntu-latest
+    steps:
+      - name: Echo
+        run: echo "Workflow validation passed"
+        
+  integration-tests:
+    name: Run Integration Tests
+    runs-on: ubuntu-latest
+    needs: validate
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     
-    services:
-      # Możesz dodać bazę danych jeśli potrzebujesz
-      # postgres:
-      #   image: postgres:15
-      #   env:
-      #     POSTGRES_PASSWORD: postgres
-      #   options: >-
-      #     --health-cmd pg_isready
-      #     --health-interval 10s
-      #     --health-timeout 5s
-      #     --health-retries 5
+    # Przykład konfiguracji z kontenerem (gdyby potrzebny)
+    # container:
+    #   image: mcr.microsoft.com/dotnet/sdk:9.0
+    #   env:
+    #     ASPNETCORE_ENVIRONMENT: Testing
     
     steps:
     - name: Checkout code
