@@ -110,9 +110,6 @@ app.UseSwaggerUI(c =>
 // Add global exception handling
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
-// Add API Key middleware
-app.UseMiddleware<ApiKeyMiddleware>();
-
 // Create database and initialize data
 using (var scope = app.Services.CreateScope())
 {
