@@ -171,7 +171,7 @@ public class ApiIntegrationTests : IAsyncLifetime
             postResponse.EnsureSuccessStatusCode();
 
             // Act 2: Odczytaj wartość (GET) z poprawną ścieżką
-            var getResponse = await _client.GetAsync($"/api/keyvalue/public/{key}");
+            var getResponse = await _client.GetAsync($"/api/kv/keyvalue/public/{key}");
             
             // Assert 2: Sprawdź czy dostaliśmy to, co zapisaliśmy
             getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
