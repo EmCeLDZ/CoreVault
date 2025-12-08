@@ -102,16 +102,17 @@ public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
         // Arrange: Dane testowe
         var key = "moj-klucz-testowy";
         var value = "tajna-wartosc";
+        var namespaceName = "test";
         
-        // Act 1: Zapisz wartość (POST)
-        // Zakładam, że Twoje API przyjmuje JSON. Jeśli przyjmuje string w body, zmień to.
-        var postResponse = await _client.PostAsJsonAsync("/api/keyvalue", new { Key = key, Value = value });
+        // Act 1: Zapisz wartość (POST) - poprawne dane z namespace
+        var postData = new { Namespace = namespaceName, Key = key, Value = value };
+        var postResponse = await _client.PostAsJsonAsync("/api/keyvalue", postData);
         
         // Assert 1: Zapis powinien się udać (200 OK lub 201 Created)
         postResponse.EnsureSuccessStatusCode();
 
-        // Act 2: Odczytaj wartość (GET)
-        var getResponse = await _client.GetAsync($"/api/keyvalue/{key}");
+        // Act 2: Odczytaj wartość (GET) z poprawną ścieżką
+        var getResponse = await _client.GetAsync($"/api/keyvalue/{namespaceName}/{key}");
         
         // Assert 2: Sprawdź czy dostaliśmy to, co zapisaliśmy
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
