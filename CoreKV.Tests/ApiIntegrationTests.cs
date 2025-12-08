@@ -1,8 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using CoreKV;
+using CoreKV.Data;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace CoreKV.Tests;
@@ -11,11 +14,50 @@ namespace CoreKV.Tests;
 public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _client;
+    private readonly WebApplicationFactory<Program> _factory;
 
     public ApiIntegrationTests(WebApplicationFactory<Program> factory)
     {
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                // Remove the existing DbContext registration
+                var descriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(DbContextOptions<CoreKVContext>));
+                if (descriptor != null)
+                {
+                    services.Remove(descriptor);
+                }
+
+                // Add in-memory database for testing
+                services.AddDbContext<CoreKVContext>(options =>
+                {
+                    options.UseSqlite("DataSource=:memory:");
+                });
+
+                // Create the service provider
+                var sp = services.BuildServiceProvider();
+                using (var scope = sp.CreateScope())
+                {
+                    var scopedServices = scope.ServiceProvider;
+                    var db = scopedServices.GetRequiredService<CoreKVContext>();
+                    
+                    // Ensure database is created
+                    db.Database.OpenConnection();
+                    db.Database.EnsureCreated();
+                    
+                    // Apply migrations if needed
+                    if (db.Database.GetPendingMigrations().Any())
+                    {
+                        db.Database.Migrate();
+                    }
+                }
+            });
+        });
+
         // Tworzymy wirtualnego klienta HTTP (jak przeglądarka/Postman)
-        _client = factory.CreateClient();
+        _client = _factory.CreateClient();
         
         // Dodajemy klucz API do nagłówków
         _client.DefaultRequestHeaders.Add("X-Api-Key", "test-key-for-ci");
