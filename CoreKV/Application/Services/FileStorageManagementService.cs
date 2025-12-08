@@ -22,7 +22,7 @@ public class FileStorageManagementService : IFileStorageManagementService
         _logger = logger;
     }
 
-    public async Task<FileStorage> UploadFileAsync(IFormFile file, string? description = null, string @namespace = "default", ApiKey apiKey = null)
+    public async Task<FileStorage> UploadFileAsync(IFormFile file, string? description = null, string @namespace = "default", ApiKey? apiKey = null)
     {
         if (file == null || file.Length == 0)
             throw new ArgumentException("Plik jest wymagany");
@@ -60,7 +60,7 @@ public class FileStorageManagementService : IFileStorageManagementService
         return fileStorage;
     }
 
-    public async Task<IEnumerable<FileStorage>> GetAllFilesAsync(string? @namespace = null, ApiKey apiKey = null)
+    public async Task<IEnumerable<FileStorage>> GetAllFilesAsync(string? @namespace = null, ApiKey? apiKey = null)
     {
         var query = _context.FileStorage.AsQueryable();
         
@@ -79,7 +79,7 @@ public class FileStorageManagementService : IFileStorageManagementService
         return files;
     }
 
-    public async Task<FileStorage?> GetFileAsync(Guid id, ApiKey apiKey = null)
+    public async Task<FileStorage?> GetFileAsync(Guid id, ApiKey? apiKey = null)
     {
         var file = await _context.FileStorage.FindAsync(id);
         
@@ -93,7 +93,7 @@ public class FileStorageManagementService : IFileStorageManagementService
         return file;
     }
 
-    public async Task<byte[]?> DownloadFileAsync(Guid id, ApiKey apiKey = null)
+    public async Task<byte[]?> DownloadFileAsync(Guid id, ApiKey? apiKey = null)
     {
         var file = await GetFileAsync(id, apiKey);
         
@@ -103,7 +103,7 @@ public class FileStorageManagementService : IFileStorageManagementService
         return await _fileStorageService.GetFileBytesAsync(file.StoredFileName);
     }
 
-    public async Task<byte[]?> ViewFileAsync(Guid id, ApiKey apiKey = null)
+    public async Task<byte[]?> ViewFileAsync(Guid id, ApiKey? apiKey = null)
     {
         var file = await GetFileAsync(id, apiKey);
         
@@ -113,7 +113,7 @@ public class FileStorageManagementService : IFileStorageManagementService
         return await _fileStorageService.GetFileBytesAsync(file.StoredFileName);
     }
 
-    public async Task<bool> DeleteFileAsync(Guid id, ApiKey apiKey = null)
+    public async Task<bool> DeleteFileAsync(Guid id, ApiKey? apiKey = null)
     {
         var file = await GetFileAsync(id, apiKey);
         

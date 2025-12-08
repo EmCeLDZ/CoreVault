@@ -1,3 +1,5 @@
+public partial class Program { }
+
 using Microsoft.EntityFrameworkCore;
 using CoreKV.Data;
 using CoreKV.Middleware;
