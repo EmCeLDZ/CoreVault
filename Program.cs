@@ -116,7 +116,7 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<CoreKVContext>();
     context.Database.EnsureCreated();
     
-    // Skip seeding data in test environment
+    // Skip seeding data in test environment completely
     var env = app.Environment;
     if (env.IsDevelopment() || env.IsProduction())
     {
@@ -145,6 +145,7 @@ using (var scope = app.Services.CreateScope())
             Console.WriteLine("Save this key securely! It won't be shown again.");
         }
     }
+    // In test environment, do nothing - tests will handle their own data
 }
 
 // Configure middleware pipeline
