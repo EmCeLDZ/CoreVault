@@ -1,0 +1,85 @@
+# .NET build artifacts
+bin/
+obj/
+*.pdb
+*.dll
+*.exe
+*.exe.config
+*.user
+*.suo
+*.cache
+*.vspscc
+*.vssscc
+*.vscode/
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NuGet packages
+*.nupkg
+**/packages/*
+!**/packages/build/
+**/*.nuspec
+
+# Visual Studio cache files
+*.ilk
+*.meta
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# Keep these files
+!*.sln
+!*.csproj
+!*.cs
+!appsettings*.json
+!Dockerfile
+!docker-compose*.yml
+
+# Logs and databases
+*.db
+*.db-shm
+*.db-wal
+logs/
+storage/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

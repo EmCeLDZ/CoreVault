@@ -7,6 +7,8 @@ using CoreKV.Domain.Interfaces;
 using CoreKV.Infrastructure.Persistence;
 using CoreKV.Domain.Services;
 using CoreKV.Application.Services;
+using CoreKV.Application.Interfaces;
+using CoreKV.Infrastructure.Services;
 using CoreKV.Filters;
 using CoreKV.Infrastructure.Logging;
 using Microsoft.AspNetCore.Http.Features;
@@ -53,6 +55,10 @@ builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
 
 // Register application services
 builder.Services.AddScoped<IKeyValueService, KeyValueService>();
+builder.Services.AddScoped<IFileStorageManagementService, FileStorageManagementService>();
+
+// Register infrastructure services
+builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
 // Register logging services
 builder.Services.AddSingleton<IAuditLogger, AuditLogger>();
@@ -100,6 +106,9 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "CoreKV API v1");
     c.RoutePrefix = string.Empty; // Serve Swagger at root
 });
+
+// Add global exception handling
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 // Add API Key middleware
 app.UseMiddleware<ApiKeyMiddleware>();

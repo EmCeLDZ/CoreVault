@@ -1,30 +1,20 @@
 using Microsoft.AspNetCore.Mvc;
 using CoreKV.Models;
 using CoreKV.Domain.Entities;
-using CoreKV.Data;
-using System.Security.Cryptography;
-using System.Text;
+using CoreKV.Application.Services;
+using CoreKV.Application.Interfaces;
 using CoreKV.Filters;
 using ApiKey = CoreKV.Domain.Entities.ApiKey;
-using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/[controller]")]
 public class FileController : ControllerBase
 {
-    private readonly CoreKVContext _context;
-    private readonly string _storagePath;
+    private readonly IFileStorageManagementService _fileStorageService;
 
-    public FileController(CoreKVContext context, IConfiguration configuration)
+    public FileController(IFileStorageManagementService fileStorageService)
     {
-        _context = context;
-        _storagePath = configuration["FileStorage:UploadPath"] ?? "uploads";
-        
-        // Upewnij się że katalog istnieje
-        if (!Directory.Exists(_storagePath))
-        {
-            Directory.CreateDirectory(_storagePath);
-        }
+        _fileStorageService = fileStorageService;
     }
 
     private ApiKey GetCurrentApiKey()
@@ -62,47 +52,16 @@ public class FileController : ControllerBase
         try
         {
             var apiKey = GetCurrentApiKey();
-            
-            if (file == null || file.Length == 0)
-                return BadRequest("Plik jest wymagany");
-
-            // Sprawdzenie rozmiaru pliku (max 10MB)
-            if (file.Length > 10 * 1024 * 1024)
-                return BadRequest("Plik jest za duży (maksymalnie 10MB)");
-
-            // Generuj unikalną nazwę pliku
-            var fileHash = await ComputeFileHashAsync(file);
-            var storedFileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            var filePath = Path.Combine(_storagePath, storedFileName);
-
-            // Zapisz plik na dysku
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            // Zapisz informacje o pliku w bazie danych
-            var fileStorage = new FileStorage
-            {
-                OriginalFileName = file.FileName,
-                StoredFileName = storedFileName,
-                ContentType = file.ContentType,
-                FileSize = file.Length,
-                FileHash = fileHash,
-                Namespace = @namespace,
-                Description = description,
-                OwnerId = apiKey.Key,
-                IsEncrypted = false
-            };
-
-            _context.FileStorage.Add(fileStorage);
-            await _context.SaveChangesAsync();
-
+            var fileStorage = await _fileStorageService.UploadFileAsync(file, description, @namespace, apiKey);
             return CreatedAtAction(nameof(GetFile), new { id = fileStorage.Id }, fileStorage);
         }
         catch (UnauthorizedAccessException ex)
         {
             return Unauthorized(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
@@ -116,23 +75,7 @@ public class FileController : ControllerBase
         try
         {
             var apiKey = GetCurrentApiKey();
-            
-            var query = _context.FileStorage.AsQueryable();
-            
-            if (!string.IsNullOrEmpty(@namespace))
-            {
-                query = query.Where(f => f.Namespace == @namespace);
-            }
-            
-            // Filtruj według uprawnień API key
-            if (apiKey.AllowedNamespaces != "*")
-            {
-                var allowedNamespaces = apiKey.AllowedNamespaces.Split(',');
-                query = query.Where(f => allowedNamespaces.Contains(f.Namespace));
-            }
-            
-            var files = await query.OrderByDescending(f => f.CreatedAt).ToListAsync();
-            
+            var files = await _fileStorageService.GetAllFilesAsync(@namespace, apiKey);
             return Ok(files);
         }
         catch (UnauthorizedAccessException ex)
@@ -147,14 +90,10 @@ public class FileController : ControllerBase
         try
         {
             var apiKey = GetCurrentApiKey();
-            var file = await _context.FileStorage.FindAsync(id);
+            var file = await _fileStorageService.GetFileAsync(id, apiKey);
             
             if (file == null)
                 return NotFound();
-            
-            // Sprawdź uprawnienia
-            if (apiKey.AllowedNamespaces != "*" && !apiKey.AllowedNamespaces.Split(',').Contains(file.Namespace))
-                return Unauthorized("Brak dostępu do tego pliku");
             
             return Ok(file);
         }
@@ -170,21 +109,15 @@ public class FileController : ControllerBase
         try
         {
             var apiKey = GetCurrentApiKey();
-            var file = await _context.FileStorage.FindAsync(id);
+            var file = await _fileStorageService.GetFileAsync(id, apiKey);
             
             if (file == null)
                 return NotFound();
             
-            // Sprawdź uprawnienia
-            if (apiKey.AllowedNamespaces != "*" && !apiKey.AllowedNamespaces.Split(',').Contains(file.Namespace))
-                return Unauthorized("Brak dostępu do tego pliku");
+            var fileBytes = await _fileStorageService.DownloadFileAsync(id, apiKey);
             
-            var filePath = Path.Combine(_storagePath, file.StoredFileName);
-            
-            if (!System.IO.File.Exists(filePath))
+            if (fileBytes == null)
                 return NotFound("Plik nie istnieje na dysku");
-            
-            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
             
             return File(fileBytes, file.ContentType, file.OriginalFileName);
         }
@@ -200,21 +133,15 @@ public class FileController : ControllerBase
         try
         {
             var apiKey = GetCurrentApiKey();
-            var file = await _context.FileStorage.FindAsync(id);
+            var file = await _fileStorageService.GetFileAsync(id, apiKey);
             
             if (file == null)
                 return NotFound();
             
-            // Sprawdź uprawnienia
-            if (apiKey.AllowedNamespaces != "*" && !apiKey.AllowedNamespaces.Split(',').Contains(file.Namespace))
-                return Unauthorized("Brak dostępu do tego pliku");
+            var fileBytes = await _fileStorageService.ViewFileAsync(id, apiKey);
             
-            var filePath = Path.Combine(_storagePath, file.StoredFileName);
-            
-            if (!System.IO.File.Exists(filePath))
+            if (fileBytes == null)
                 return NotFound("Plik nie istnieje na dysku");
-            
-            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
             
             return File(fileBytes, file.ContentType);
         }
@@ -231,25 +158,10 @@ public class FileController : ControllerBase
         try
         {
             var apiKey = GetCurrentApiKey();
-            var file = await _context.FileStorage.FindAsync(id);
+            var success = await _fileStorageService.DeleteFileAsync(id, apiKey);
             
-            if (file == null)
+            if (!success)
                 return NotFound();
-            
-            // Sprawdź uprawnienia
-            if (apiKey.AllowedNamespaces != "*" && !apiKey.AllowedNamespaces.Split(',').Contains(file.Namespace))
-                return Unauthorized("Brak dostępu do tego pliku");
-            
-            // Usuń plik z dysku
-            var filePath = Path.Combine(_storagePath, file.StoredFileName);
-            if (System.IO.File.Exists(filePath))
-            {
-                System.IO.File.Delete(filePath);
-            }
-            
-            // Usuń rekord z bazy danych
-            _context.FileStorage.Remove(file);
-            await _context.SaveChangesAsync();
             
             return NoContent();
         }
@@ -257,13 +169,5 @@ public class FileController : ControllerBase
         {
             return Unauthorized(ex.Message);
         }
-    }
-
-    private async Task<string> ComputeFileHashAsync(IFormFile file)
-    {
-        using var sha256 = SHA256.Create();
-        using var stream = file.OpenReadStream();
-        var hashBytes = await sha256.ComputeHashAsync(stream);
-        return Convert.ToHexString(hashBytes).ToLowerInvariant();
     }
 }

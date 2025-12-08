@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  corekv-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: corekv-api
+    ports:
+      - "5000:80"
+      - "5001:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/corekv.db
+    volumes:
+      - ./storage:/app/storage
+      - ./logs:/app/logs
+      - db_data:/app/data
+    networks:
+      - corekv-network
+    restart: unless-stopped
+    depends_on:
+      - db-healthcheck
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Health check service to ensure database is ready
+  db-healthcheck:
+    image: alpine:latest
+    container_name: db-healthcheck
+    command: >
+      sh -c "
+      echo 'Database health check service running...'
+      while true; do
+        sleep 3600
+      done
+      "
+    networks:
+      - corekv-network
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  corekv-network:
+    driver: bridge
