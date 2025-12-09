@@ -54,8 +54,9 @@ jobs:
       run: dotnet build CoreVault.sln --no-restore --configuration Release
       
     - name: Run integration tests
-      run: dotnet test tests/CoreVault.Tests/CoreVault.Tests.csproj --no-build --configuration Release --verbosity normal --filter "Category=Integration"
+      run: |
+        cd tests/CoreVault.Tests
+        dotnet test --no-build --configuration Release --filter "Category=Integration"
       env:
-        # Dodaj zmienne środowiskowe potrzebne do testów
         ASPNETCORE_ENVIRONMENT: Testing
         ADMIN_API_KEY: test-key-for-ci
