@@ -55,7 +55,8 @@ jobs:
       
     - name: Run integration tests
       working-directory: ./tests/CoreVault.Tests
-      run: dotnet test --no-build --configuration Release --filter "Category=Integration"
+      run: |
+        dotnet vstest bin/Release/net9.0/CoreVault.Tests.dll --filter "Category=Integration"
       env:
         ASPNETCORE_ENVIRONMENT: Testing
         ADMIN_API_KEY: test-key-for-ci
