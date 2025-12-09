@@ -59,7 +59,10 @@ jobs:
       run: dotnet restore CoreVault.sln
       
     - name: Build
-      run: dotnet build CoreVault.sln --no-restore --configuration Release
+      run: |
+        dotnet build CoreVault.sln --no-restore --configuration Release
+        # Upewnij się, że testy są zbudowane
+        dotnet build tests/CoreVault.Tests/CoreVault.Tests.csproj --no-restore --configuration Release
       
     - name: Check test files
       run: |
