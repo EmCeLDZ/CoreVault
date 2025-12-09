@@ -33,9 +33,6 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore CoreVault.sln
       
-    - name: Restore test dependencies
-      run: dotnet restore tests/CoreVault.Tests/CoreVault.Tests.csproj
-      
     - name: Build
       run: dotnet build CoreVault.sln --no-restore --configuration Release
       
